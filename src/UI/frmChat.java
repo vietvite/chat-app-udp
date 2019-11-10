@@ -54,6 +54,29 @@ public class frmChat extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }
     
+    class SendFileThread extends Thread {
+        String IP;
+        int toPort;
+        int hostPort;
+        String filePath;
+        String fileName;
+
+        public SendFileThread(String IP, int toPort, int hostPort, String filePath, String fileName) {
+            this.IP = IP;
+            this.toPort = toPort;
+            this.hostPort = hostPort;
+            this.filePath = filePath;
+            this.fileName = fileName;
+        }
+
+        @Override
+        public void run() {
+            TransferFile fileSocket = new TransferFile(this.IP, this.toPort, this.hostPort);
+            fileSocket.sendFile(this.filePath, this.fileName);
+        }
+        
+    }
+    
     class ReceiveFileThread extends Thread {
         FileOutputStream fileOutput;
         String fileName;
@@ -100,17 +123,17 @@ public class frmChat extends javax.swing.JFrame {
             
             while(true) {
                 String message = messageSocket.receiveMessage();
-                System.out.println("message listened: " + message);
+                if(message.equals("")) return;
+                
                 String sub = message.substring(0, 4);
-                System.out.println("sub: " + sub);
                 if(sub.equals("FILE")) {
                     String fileName = message.substring(5, message.length());
                     listModel.addElement("Receiving file '" + fileName + "'");
                     fileSocket.isReceivingFile = true;
-                    ReceiveFileThread revFileThread = new ReceiveFileThread(fileName);
-                    revFileThread.start();
+                    Thread t = new Thread(new ReceiveFileThread(fileName));
+                    t.start();
+                    System.out.println("Pass receive file thread.");
                 } else {
-                    System.out.println("message: " + message);
                     listModel.addElement(message);
                 }
                 listMessage.setModel(listModel);
@@ -419,7 +442,7 @@ public class frmChat extends javax.swing.JFrame {
             fileSocket.openPort(hostPort + 1);
             txtPort.setText(String.valueOf(hostPort));
             
-            ReceiveMessageThread revMessThread = new ReceiveMessageThread();
+            Thread revMessThread = new Thread(new ReceiveMessageThread());
             revMessThread.start();
         }
         
@@ -456,11 +479,13 @@ public class frmChat extends javax.swing.JFrame {
         int toPort = Integer.parseInt(txtToPort.getText());
 //        String IP = ((ComboItem)selected).getIp();
         String IP = "127.0.0.1";
-        
-        TransferFile fileSocket = new TransferFile(IP, toPort, hostPort);
-        fileSocket.sendFile(chooser.getSelectedFile().getPath(), chooser.getSelectedFile().getName());
+
+        String filePath = chooser.getSelectedFile().getPath();
+        String fileName = chooser.getSelectedFile().getName();
+        SendFileThread sendFileThread = new SendFileThread(IP, toPort, hostPort, filePath, fileName);
+        sendFileThread.start();
     }//GEN-LAST:event_btnAttachActionPerformed
- 
+
     /**
      * @param args the command line arguments
      */

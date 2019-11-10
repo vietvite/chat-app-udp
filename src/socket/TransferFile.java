@@ -67,7 +67,6 @@ public class TransferFile {
         DatagramPacket pkg = new DatagramPacket(buff, buffLength, IP, this.toPort + 1);
         client.send(pkg);
         client.close();
-        System.out.println("Sent buff: " + buff);
     }
     
     public byte[] receiveByte() {
@@ -95,7 +94,7 @@ public class TransferFile {
             
             TransferMessage messaging = new TransferMessage();
             messaging.sendMessage(this.ip, toPort, mess);
-            System.out.println("Start sending file to " + this.toPort + " port.");
+            System.out.println("Start sending file to " + (this.toPort + 1) + " port.");
             Thread.sleep(5);
             
             int buffFileSize = fileInput.read(buff);
