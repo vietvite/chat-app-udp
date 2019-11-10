@@ -52,7 +52,7 @@ public class TransferFile {
         
         try {
             serverSocket = new DatagramSocket(this.hostPort);
-            System.out.println("File port " + this.hostPort + "opened");
+            System.out.println("File port " + this.hostPort + " opened");
         } catch (SocketException ex) {
             Logger.getLogger(TransferFile.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -87,9 +87,9 @@ public class TransferFile {
     
     public void sendFile(String filePath, String fileName) {
         try {
-            
             fileInput = new FileInputStream(filePath);
-            String mess = "FILE:" + fileName;
+            String hostIp = InetAddress.getLocalHost().getHostAddress();
+            String mess = "FILE:" + hostIp + ":" + fileName;
             byte[] buff = new byte[BUFF_SIZE];
             
             TransferMessage messaging = new TransferMessage();

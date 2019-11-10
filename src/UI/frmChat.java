@@ -11,6 +11,8 @@ import dao.MessageDAO;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -55,14 +57,14 @@ public class frmChat extends javax.swing.JFrame {
     }
     
     class SendFileThread extends Thread {
-        String IP;
+        String toIp;
         int toPort;
         int hostPort;
         String filePath;
         String fileName;
 
         public SendFileThread(String IP, int toPort, int hostPort, String filePath, String fileName) {
-            this.IP = IP;
+            this.toIp = IP;
             this.toPort = toPort;
             this.hostPort = hostPort;
             this.filePath = filePath;
@@ -71,7 +73,7 @@ public class frmChat extends javax.swing.JFrame {
 
         @Override
         public void run() {
-            TransferFile fileSocket = new TransferFile(this.IP, this.toPort, this.hostPort);
+            TransferFile fileSocket = new TransferFile(this.toIp, this.toPort, this.hostPort);
             fileSocket.sendFile(this.filePath, this.fileName);
         }
         
@@ -122,18 +124,20 @@ public class frmChat extends javax.swing.JFrame {
         public void run() {
             
             while(true) {
-                String message = messageSocket.receiveMessage();
-                if(message.equals("")) return;
+                String pkg = messageSocket.receiveMessage();
+                if(pkg.equals("")) return;
                 
-                String sub = message.substring(0, 4);
+                System.out.println("MESSAGE: " + pkg);
+                String sub = pkg.substring(0, 4);
                 if(sub.equals("FILE")) {
-                    String fileName = message.substring(5, message.length());
+                    String fileName = pkg.substring(5, pkg.length());
                     listModel.addElement("Receiving file '" + fileName + "'");
                     fileSocket.isReceivingFile = true;
                     Thread t = new Thread(new ReceiveFileThread(fileName));
                     t.start();
-                    System.out.println("Pass receive file thread.");
                 } else {
+                    String[] tmp = pkg.split("[:]");
+                    String message = tmp[1];
                     listModel.addElement(message);
                 }
                 listMessage.setModel(listModel);
@@ -360,7 +364,6 @@ public class frmChat extends javax.swing.JFrame {
     }
     
     private void updateMenubar() {
-        System.out.println("fullname: " + fullname);
         menuAccount.setText(fullname != null ?  fullname : "Account");
         if(username == null) {
             JMenuItem loginMenu = new JMenuItem("Login");
@@ -457,8 +460,15 @@ public class frmChat extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowClosing
 
     private void btnSendMessageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendMessageActionPerformed
-        // TODO add your handling code here:
-        String message = txtMessage.getText();
+        String hostIp = "";
+        try {
+            
+            hostIp = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        String mess = txtMessage.getText();
+        String message = hostIp + ":" + mess;
         if(message.equals("")){
             return;
         }
@@ -467,6 +477,9 @@ public class frmChat extends javax.swing.JFrame {
 //        get receiver IP
         Object selected = cbbFriendList.getSelectedItem();
 //        String IP = ((ComboItem)selected).getIp();
+        
+        listModel.addElement("Me: " + mess);
+        listMessage.setModel(listModel);
         
         String IP = "127.0.0.1";
         messageSocket.sendMessage(IP, toPort, message);
@@ -482,6 +495,10 @@ public class frmChat extends javax.swing.JFrame {
 
         String filePath = chooser.getSelectedFile().getPath();
         String fileName = chooser.getSelectedFile().getName();
+        
+        listModel.addElement("Me: Send file '" + fileName + "'");
+        listMessage.setModel(listModel);
+        
         SendFileThread sendFileThread = new SendFileThread(IP, toPort, hostPort, filePath, fileName);
         sendFileThread.start();
     }//GEN-LAST:event_btnAttachActionPerformed
