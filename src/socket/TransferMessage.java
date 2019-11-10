@@ -24,7 +24,7 @@ public class TransferMessage {
     public void openPort(int port) {
         try {
             serverSocket = new DatagramSocket(port);
-            System.out.println("Port " + port + " opened");
+            System.out.println("Message port " + port + " opened");
         } catch (SocketException ex) {
             Logger.getLogger(TransferMessage.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -22,45 +22,21 @@ import java.util.logging.Logger;
  * @author zxc
  */
 public class TransferFile {
-    class ReceiveFileThread extends Thread {
-
-        @Override
-        public void run() {
-            while(true) {
-                if(isReceivingFile) {
-                    try {
-                        byte[] buff = new byte[BUFF_SIZE];
-                        buff = receiveByte();
-                        String data = new String(buff, 0, receiveByteLength);
-
-                        if(data.trim().equals("ENDFILE")) {
-                            fileOutput.close();
-                            isReceivingFile = false;
-                            return;
-                        } else {
-                            fileOutput.write(buff, 0, receiveByteLength);
-                        }
-                    } catch (IOException ex) {
-                        Logger.getLogger(TransferFile.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-            }
-        }
-    }
     public boolean isReceivingFile = false;
+    public int receiveByteLength;
+    
     String ip;
     int toPort;
     int hostPort;
     
     int BUFF_SIZE = 512;
-    int receiveByteLength;
+    
     DatagramSocket serverSocket;
     
     FileInputStream fileInput;
     FileOutputStream fileOutput;
     
 //    constructor
-    
     public TransferFile() {
     }
 
@@ -76,15 +52,19 @@ public class TransferFile {
         
         try {
             serverSocket = new DatagramSocket(this.hostPort);
+            System.out.println("File port " + this.hostPort + "opened");
         } catch (SocketException ex) {
             Logger.getLogger(TransferFile.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
     
     public void sendByte(byte[] buff, int buffLength) throws SocketException, UnknownHostException, IOException {
+        
         DatagramSocket client = new DatagramSocket();
         InetAddress IP = InetAddress.getByName(this.ip);
-        DatagramPacket pkg = new DatagramPacket(buff, buffLength, IP, this.toPort);
+        
+//        Destinate port: `this.toPort+1` because current (receiver) port being used by message transfer
+        DatagramPacket pkg = new DatagramPacket(buff, buffLength, IP, this.toPort + 1);
         client.send(pkg);
         client.close();
         System.out.println("Sent buff: " + buff);
@@ -108,13 +88,14 @@ public class TransferFile {
     
     public void sendFile(String filePath, String fileName) {
         try {
+            
             fileInput = new FileInputStream(filePath);
             String mess = "FILE:" + fileName;
             byte[] buff = new byte[BUFF_SIZE];
             
             TransferMessage messaging = new TransferMessage();
             messaging.sendMessage(this.ip, toPort, mess);
-            System.out.println("File is sending to " + this.toPort + " port.");
+            System.out.println("Start sending file to " + this.toPort + " port.");
             Thread.sleep(5);
             
             int buffFileSize = fileInput.read(buff);
@@ -123,23 +104,14 @@ public class TransferFile {
                 Thread.sleep(2);
                 buffFileSize = fileInput.read(buff, 0, buff.length);
             }
-            messaging.sendMessage(this.ip, this.toPort, "ENDFILE");
+            
+//            Destinate port: `this.toPort+1` because current (receiver) port being used by message transfer
+            messaging.sendMessage(this.ip, this.toPort + 1, "ENDFILE");
             fileInput.close();
             
         } catch (FileNotFoundException | InterruptedException ex) {
             Logger.getLogger(TransferFile.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(TransferFile.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-    
-    public void receiveFile(String fileName) {
-        try {
-            fileOutput = new FileOutputStream("./" + fileName);
-            ReceiveFileThread revFileThread = new ReceiveFileThread();
-            revFileThread.start();
-            
-        } catch (FileNotFoundException ex) {
             Logger.getLogger(TransferFile.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

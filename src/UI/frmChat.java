@@ -8,6 +8,9 @@ package UI;
 import bean.Message;
 import dao.AccountDAO;
 import dao.MessageDAO;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -31,10 +34,13 @@ public class frmChat extends javax.swing.JFrame {
     String username;
     String fullname;
     TransferMessage messageSocket = new TransferMessage();
+    TransferFile fileSocket = new TransferFile();
+    
     AccountDAO handle = new AccountDAO();
     MessageDAO handleMess = new MessageDAO();
     DefaultListModel listModel;
     ArrayList<ComboItem> onlineFriendList = new ArrayList<>();
+    int BUFF_SIZE = 512;
     
     int hostPort = randomRange(1260, 1460);
     /**
@@ -48,6 +54,46 @@ public class frmChat extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }
     
+    class ReceiveFileThread extends Thread {
+        FileOutputStream fileOutput;
+        String fileName;
+
+        public ReceiveFileThread(String fileName) {
+            this.fileName = fileName;
+            try {
+                fileOutput = new FileOutputStream("./" + this.fileName);
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        
+        
+        @Override
+        public void run() {
+            while(true) {
+                if(fileSocket.isReceivingFile) {
+                    try {
+                        byte[] buff = new byte[BUFF_SIZE];
+                        buff = fileSocket.receiveByte();
+                        String data = new String(buff, 0, fileSocket.receiveByteLength);
+                        
+                        if(data.trim().equals("ENDFILE")) {
+                            fileOutput.close();
+                            fileSocket.isReceivingFile = false;
+                            listModel.addElement("Received '" + fileName + "'");
+                            return;
+                        } else {
+                            fileOutput.write(buff, 0, fileSocket.receiveByteLength);
+                        }
+                    } catch (IOException ex) {
+                        Logger.getLogger(TransferFile.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                }
+            }
+        }
+    }
+    
+    
     class ReceiveMessageThread extends Thread {
         @Override
         public void run() {
@@ -60,15 +106,9 @@ public class frmChat extends javax.swing.JFrame {
                 if(sub.equals("FILE")) {
                     String fileName = message.substring(5, message.length());
                     listModel.addElement("Receiving file '" + fileName + "'");
-                    TransferFile fileSocket = new TransferFile();
-                    
-                    
-//                    Dang bug o port khac nhau
-                    
-                    
-                    fileSocket.openPort(hostPort + 1);
                     fileSocket.isReceivingFile = true;
-                    fileSocket.receiveFile(fileName);
+                    ReceiveFileThread revFileThread = new ReceiveFileThread(fileName);
+                    revFileThread.start();
                 } else {
                     System.out.println("message: " + message);
                     listModel.addElement(message);
@@ -125,7 +165,6 @@ public class frmChat extends javax.swing.JFrame {
         menuEdit = new javax.swing.JMenu();
 
         setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
-        setUndecorated(true);
         setResizable(false);
         addWindowListener(new java.awt.event.WindowAdapter() {
             public void windowClosing(java.awt.event.WindowEvent evt) {
@@ -210,7 +249,7 @@ public class frmChat extends javax.swing.JFrame {
         txtPort.setText("1260");
 
         txtToPort.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtToPort.setText("1260");
+        txtToPort.setText("1261");
 
         jLabel4.setText("To port:");
 
@@ -377,8 +416,8 @@ public class frmChat extends javax.swing.JFrame {
             
 //            hostPort = Integer.parseInt(txtPort.getText());
             messageSocket.openPort(hostPort);
+            fileSocket.openPort(hostPort + 1);
             txtPort.setText(String.valueOf(hostPort));
-            System.out.println("Client listen on port: " + hostPort);
             
             ReceiveMessageThread revMessThread = new ReceiveMessageThread();
             revMessThread.start();
@@ -397,6 +436,9 @@ public class frmChat extends javax.swing.JFrame {
     private void btnSendMessageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendMessageActionPerformed
         // TODO add your handling code here:
         String message = txtMessage.getText();
+        if(message.equals("")){
+            return;
+        }
         int toPort = Integer.parseInt(txtToPort.getText());
         
 //        get receiver IP
@@ -404,7 +446,6 @@ public class frmChat extends javax.swing.JFrame {
 //        String IP = ((ComboItem)selected).getIp();
         
         String IP = "127.0.0.1";
-        
         messageSocket.sendMessage(IP, toPort, message);
     }//GEN-LAST:event_btnSendMessageActionPerformed
 
@@ -416,7 +457,7 @@ public class frmChat extends javax.swing.JFrame {
 //        String IP = ((ComboItem)selected).getIp();
         String IP = "127.0.0.1";
         
-        TransferFile fileSocket = new TransferFile(IP, toPort + 1, hostPort);
+        TransferFile fileSocket = new TransferFile(IP, toPort, hostPort);
         fileSocket.sendFile(chooser.getSelectedFile().getPath(), chooser.getSelectedFile().getName());
     }//GEN-LAST:event_btnAttachActionPerformed
  
