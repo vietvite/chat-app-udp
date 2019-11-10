@@ -51,7 +51,7 @@ public class TransferMessage {
             DatagramPacket pkg = new DatagramPacket(message.getBytes(), message.length(), ipAddr, port);
             clientSocket.send(pkg);
             clientSocket.close();
-            System.out.println(message + " sent");
+            System.out.println(message + " sent to IP: " + ip + ", port: " + port);
             
         } catch (SocketException | UnknownHostException ex) {
             Logger.getLogger(TransferMessage.class.getName()).log(Level.SEVERE, null, ex);

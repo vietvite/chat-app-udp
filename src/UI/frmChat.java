@@ -5,16 +5,21 @@
  */
 package UI;
 
+import bean.Message;
 import dao.AccountDAO;
+import dao.MessageDAO;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.Random;
-import java.util.Vector;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultComboBoxModel;
-import javax.swing.JList;
+import javax.swing.DefaultListModel;
+import javax.swing.JFileChooser;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
+import socket.TransferFile;
 import socket.TransferMessage;
 
 /**
@@ -25,9 +30,12 @@ public class frmChat extends javax.swing.JFrame {
 
     String username;
     String fullname;
-    Vector listMessageItem = new Vector();
     TransferMessage messageSocket = new TransferMessage();
     AccountDAO handle = new AccountDAO();
+    MessageDAO handleMess = new MessageDAO();
+    DefaultListModel listModel;
+    ArrayList<ComboItem> onlineFriendList = new ArrayList<>();
+    
     int hostPort = randomRange(1260, 1460);
     /**
      * Creates new form frmChat
@@ -43,11 +51,29 @@ public class frmChat extends javax.swing.JFrame {
     class ReceiveMessageThread extends Thread {
         @Override
         public void run() {
-            listMessage  = new JList<>(listMessageItem);
+            
             while(true) {
                 String message = messageSocket.receiveMessage();
-                listMessageItem.add(message);
-                listMessage.updateUI();
+                System.out.println("message listened: " + message);
+                String sub = message.substring(0, 4);
+                System.out.println("sub: " + sub);
+                if(sub.equals("FILE")) {
+                    String fileName = message.substring(5, message.length());
+                    listModel.addElement("Receiving file '" + fileName + "'");
+                    TransferFile fileSocket = new TransferFile();
+                    
+                    
+//                    Dang bug o port khac nhau
+                    
+                    
+                    fileSocket.openPort(hostPort + 1);
+                    fileSocket.isReceivingFile = true;
+                    fileSocket.receiveFile(fileName);
+                } else {
+                    System.out.println("message: " + message);
+                    listModel.addElement(message);
+                }
+                listMessage.setModel(listModel);
             }
         }
     }
@@ -124,12 +150,12 @@ public class frmChat extends javax.swing.JFrame {
         });
 
         btnAttach.setText("Attach");
-
-        listMessage.setModel(new javax.swing.AbstractListModel<String>() {
-            String[] strings = { "Item 1", "Item 2", "Item 3", "Item 4", "Item 5" };
-            public int getSize() { return strings.length; }
-            public String getElementAt(int i) { return strings[i]; }
+        btnAttach.addActionListener(new java.awt.event.ActionListener() {
+            public void actionPerformed(java.awt.event.ActionEvent evt) {
+                btnAttachActionPerformed(evt);
+            }
         });
+
         jScrollPane1.setViewportView(listMessage);
 
         javax.swing.GroupLayout jPanel1Layout = new javax.swing.GroupLayout(jPanel1);
@@ -138,21 +164,18 @@ public class frmChat extends javax.swing.JFrame {
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(jPanel1Layout.createSequentialGroup()
                 .addContainerGap()
-                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(jScrollPane1)
+                .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
+                    .addComponent(jScrollPane1, javax.swing.GroupLayout.PREFERRED_SIZE, 0, Short.MAX_VALUE)
                     .addGroup(jPanel1Layout.createSequentialGroup()
-                        .addGroup(jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                            .addGroup(javax.swing.GroupLayout.Alignment.LEADING, jPanel1Layout.createSequentialGroup()
-                                .addComponent(btnAttach)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                                .addComponent(btnSendMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addGroup(jPanel1Layout.createSequentialGroup()
-                                .addComponent(jLabel1)
-                                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                                .addComponent(cbbFriendList, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
-                            .addComponent(txtMessage))
-                        .addGap(0, 0, Short.MAX_VALUE)))
-                .addContainerGap())
+                        .addComponent(btnAttach)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                        .addComponent(btnSendMessage, javax.swing.GroupLayout.PREFERRED_SIZE, 109, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel1Layout.createSequentialGroup()
+                        .addComponent(jLabel1)
+                        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+                        .addComponent(cbbFriendList, javax.swing.GroupLayout.PREFERRED_SIZE, 160, javax.swing.GroupLayout.PREFERRED_SIZE))
+                    .addComponent(txtMessage, javax.swing.GroupLayout.Alignment.TRAILING))
+                .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         jPanel1Layout.setVerticalGroup(
             jPanel1Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -187,7 +210,7 @@ public class frmChat extends javax.swing.JFrame {
         txtPort.setText("1260");
 
         txtToPort.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtToPort.setText("1261");
+        txtToPort.setText("1260");
 
         jLabel4.setText("To port:");
 
@@ -198,15 +221,13 @@ public class frmChat extends javax.swing.JFrame {
         jPanel2Layout.setHorizontalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
             .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, jPanel2Layout.createSequentialGroup()
-                .addContainerGap()
                 .addComponent(jLabel5)
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(txtPort, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
                 .addComponent(jLabel4)
                 .addGap(3, 3, 3)
-                .addComponent(txtToPort, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
+                .addComponent(txtToPort, javax.swing.GroupLayout.PREFERRED_SIZE, 49, javax.swing.GroupLayout.PREFERRED_SIZE))
         );
         jPanel2Layout.setVerticalGroup(
             jPanel2Layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -235,9 +256,9 @@ public class frmChat extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.TRAILING, false)
-                    .addComponent(jPanel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addComponent(pnHeader, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
+                    .addComponent(jPanel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+                    .addComponent(jPanel2, javax.swing.GroupLayout.Alignment.LEADING, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE))
                 .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         );
         layout.setVerticalGroup(
@@ -266,6 +287,7 @@ public class frmChat extends javax.swing.JFrame {
                 while(rs.next()) {
                     item = new ComboItem(rs.getString("username"), rs.getString("fullname"), rs.getString("ip"));
                     model.addElement(item);
+                    onlineFriendList.add(item);
                 }
             } catch (SQLException ex) {
                 Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
@@ -276,6 +298,7 @@ public class frmChat extends javax.swing.JFrame {
     }
     
     private void updateMenubar() {
+        System.out.println("fullname: " + fullname);
         menuAccount.setText(fullname != null ?  fullname : "Account");
         if(username == null) {
             JMenuItem loginMenu = new JMenuItem("Login");
@@ -312,8 +335,27 @@ public class frmChat extends javax.swing.JFrame {
         });
         menuAccount.add(exitMenu);
         
-        menuEdit.add("Save message");
+        JMenuItem saveMessage = new JMenuItem("Save message");
+        saveMessage.addActionListener((e) -> {
+            for(int i = 0; i< listMessage.getModel().getSize();i++){
+                try {
+                    System.out.println(listMessage.getModel().getElementAt(i));
+                    handleMess.saveMessage(new Message(this.username, listMessage.getModel().getElementAt(i)));
+                } catch (SQLException ex) {
+                    Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
+                    return;
+                } catch (ClassNotFoundException ex) {
+                    Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
+                    return;
+                }
+            }
+            JOptionPane.showMessageDialog(this, "Message saved to database.");
+        });
+        menuEdit.add(saveMessage);
+        
+        JMenuItem showMessage = new JMenuItem("Show message");
         menuEdit.add("Show message");
+        
     }
     
     private static int randomRange(int min, int max) {
@@ -326,22 +368,24 @@ public class frmChat extends javax.swing.JFrame {
     }
     
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
-
-        updateFriendList();
-        updateMenubar();
+        listModel = new DefaultListModel();
         
         if(username != null) {
             fullname = handle.getFullname(username);
 //            update online state
             handle.setOnlineState(username, "1");
             
-            hostPort = Integer.parseInt(txtPort.getText());
+//            hostPort = Integer.parseInt(txtPort.getText());
             messageSocket.openPort(hostPort);
+            txtPort.setText(String.valueOf(hostPort));
             System.out.println("Client listen on port: " + hostPort);
             
             ReceiveMessageThread revMessThread = new ReceiveMessageThread();
             revMessThread.start();
         }
+        
+        updateFriendList();
+        updateMenubar();
     }//GEN-LAST:event_formWindowOpened
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
@@ -357,10 +401,24 @@ public class frmChat extends javax.swing.JFrame {
         
 //        get receiver IP
         Object selected = cbbFriendList.getSelectedItem();
-        String IP = ((ComboItem)selected).getIp();
+//        String IP = ((ComboItem)selected).getIp();
+        
+        String IP = "127.0.0.1";
         
         messageSocket.sendMessage(IP, toPort, message);
     }//GEN-LAST:event_btnSendMessageActionPerformed
+
+    private void btnAttachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAttachActionPerformed
+        // TODO add your handling code here:
+        JFileChooser chooser = new JFileChooser();
+        chooser.showOpenDialog(this);
+        int toPort = Integer.parseInt(txtToPort.getText());
+//        String IP = ((ComboItem)selected).getIp();
+        String IP = "127.0.0.1";
+        
+        TransferFile fileSocket = new TransferFile(IP, toPort + 1, hostPort);
+        fileSocket.sendFile(chooser.getSelectedFile().getPath(), chooser.getSelectedFile().getName());
+    }//GEN-LAST:event_btnAttachActionPerformed
  
     /**
      * @param args the command line arguments
