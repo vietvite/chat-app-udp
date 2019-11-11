@@ -156,6 +156,11 @@ public class frmLogIn extends javax.swing.JFrame {
         username = txtUsername.getText();
         password = txtPassword.getText();
         
+        if(username.equals("") || password.equals("")) {
+            JOptionPane.showMessageDialog(this, "Please type all field input.");
+            return;
+        }
+        
         AccountDAO handle = new AccountDAO();
         if(handle.checkAccount(username, password)) {
             this.dispose();
@@ -179,7 +184,6 @@ public class frmLogIn extends javax.swing.JFrame {
     private void btnCancelActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnCancelActionPerformed
         // TODO add your handling code here:
         this.dispose();
-        System.out.println("LOGIN username: " + username);
         new frmChat(username).show();
     }//GEN-LAST:event_btnCancelActionPerformed
 
