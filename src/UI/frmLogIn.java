@@ -26,6 +26,25 @@ public class frmLogIn extends javax.swing.JFrame {
 //        set form center of screen
         setLocationRelativeTo(null);
     }
+    
+    private void login() {
+        username = txtUsername.getText();
+        password = txtPassword.getText();
+        
+        if(username.equals("") || password.equals("")) {
+            JOptionPane.showMessageDialog(this, "Please type all field input.");
+            return;
+        }
+        
+        AccountDAO handle = new AccountDAO();
+        if(handle.checkAccount(username, password)) {
+            this.dispose();
+            new frmChat(username).show();
+        } else {
+            JOptionPane.showMessageDialog(this, "Incorrect username or password.");
+        }
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -59,7 +78,12 @@ public class frmLogIn extends javax.swing.JFrame {
         jLabel1.setFont(new java.awt.Font("Dialog", 0, 48)); // NOI18N
         jLabel1.setText("Login");
 
-        txtUsername.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
+        txtUsername.setFont(new java.awt.Font("Dialog", 0, 18)); // NOI18N
+        txtUsername.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtUsernameKeyPressed(evt);
+            }
+        });
 
         jLabel2.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
         jLabel2.setText("Username:");
@@ -87,6 +111,13 @@ public class frmLogIn extends javax.swing.JFrame {
 
         jLabel5.setFont(new java.awt.Font("Dialog", 2, 12)); // NOI18N
         jLabel5.setText("Not have account?");
+
+        txtPassword.setFont(new java.awt.Font("Dialog", 0, 18)); // NOI18N
+        txtPassword.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtPasswordKeyPressed(evt);
+            }
+        });
 
         btnCancel.setFont(new java.awt.Font("Dialog", 0, 18)); // NOI18N
         btnCancel.setText("Cancel");
@@ -127,15 +158,18 @@ public class frmLogIn extends javax.swing.JFrame {
             .addGroup(layout.createSequentialGroup()
                 .addContainerGap()
                 .addComponent(jLabel1)
-                .addGap(26, 26, 26)
-                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 33, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(jLabel2))
+                .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(30, 30, 30)
+                        .addComponent(jLabel2))
+                    .addGroup(layout.createSequentialGroup()
+                        .addGap(18, 18, 18)
+                        .addComponent(txtUsername, javax.swing.GroupLayout.PREFERRED_SIZE, 41, javax.swing.GroupLayout.PREFERRED_SIZE)))
                 .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-                    .addComponent(txtPassword, javax.swing.GroupLayout.DEFAULT_SIZE, 39, Short.MAX_VALUE)
-                    .addComponent(jLabel3))
-                .addGap(18, 18, 18)
+                    .addComponent(jLabel3)
+                    .addComponent(txtPassword, javax.swing.GroupLayout.PREFERRED_SIZE, 39, javax.swing.GroupLayout.PREFERRED_SIZE))
+                .addGap(18, 18, Short.MAX_VALUE)
                 .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
                     .addComponent(btnSignin, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
                     .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, layout.createSequentialGroup()
@@ -153,21 +187,7 @@ public class frmLogIn extends javax.swing.JFrame {
 
     private void btnSigninActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSigninActionPerformed
         // TODO add your handling code here:
-        username = txtUsername.getText();
-        password = txtPassword.getText();
-        
-        if(username.equals("") || password.equals("")) {
-            JOptionPane.showMessageDialog(this, "Please type all field input.");
-            return;
-        }
-        
-        AccountDAO handle = new AccountDAO();
-        if(handle.checkAccount(username, password)) {
-            this.dispose();
-            new frmChat(username).show();
-        } else {
-            JOptionPane.showMessageDialog(this, "Incorrect username or password.");
-        }
+        login();
     }//GEN-LAST:event_btnSigninActionPerformed
 
     private void lblSignupMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_lblSignupMouseClicked
@@ -186,6 +206,20 @@ public class frmLogIn extends javax.swing.JFrame {
         this.dispose();
         new frmChat(username).show();
     }//GEN-LAST:event_btnCancelActionPerformed
+
+    private void txtPasswordKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtPasswordKeyPressed
+        // TODO add your handling code here:
+        if (evt.getKeyCode() == evt.VK_ENTER){
+            login();
+        }
+    }//GEN-LAST:event_txtPasswordKeyPressed
+
+    private void txtUsernameKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtUsernameKeyPressed
+        // TODO add your handling code here:
+        if (evt.getKeyCode() == evt.VK_ENTER){
+            login();
+        }
+    }//GEN-LAST:event_txtUsernameKeyPressed
 
     /**
      * @param args the command line arguments

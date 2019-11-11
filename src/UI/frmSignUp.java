@@ -32,6 +32,48 @@ public class frmSignUp extends javax.swing.JFrame {
         setLocationRelativeTo(null);
     }
     
+    private void signin() {
+        username = txtUsername.getText();
+        String password = txtPassword.getText();
+        String fullname = txtFullname.getText();
+        String repassword = txtRepassword.getText();
+        String ip = null;
+        
+        if(username.equals("") || password.equals("") || 
+                fullname.equals("") || repassword.equals("")) {
+            JOptionPane.showMessageDialog(this, "Please type all field input.");
+            return;
+        }
+        
+        if(!repassword.equals(password)) {
+            JOptionPane.showMessageDialog(this, "Please input the same password.");
+            return;
+        }
+        try {
+            ip = InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(frmSignUp.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        Account account = new Account(username, fullname, password, ip, 1);
+        AccountDAO handle = new AccountDAO();
+        
+        try {
+            int result = handle.createAccount(account);
+            if(result != 0) {
+                this.dispose();
+                new frmChat(username).show();
+            }
+        } catch (SQLException ex) {
+//            Logger.getLogger(frmSignUp.class.getName()).log(Level.SEVERE, null, ex);
+            if(ex.getMessage().contains("Duplicate entry")) {
+                JOptionPane.showMessageDialog(this, "Username already exist. Please choose another one.");
+            }
+        } catch (ClassNotFoundException ex) {
+            Logger.getLogger(frmSignUp.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -71,6 +113,11 @@ public class frmSignUp extends javax.swing.JFrame {
         jLabel1.setText("Signup");
 
         txtUsername.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
+        txtUsername.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtUsernameKeyPressed(evt);
+            }
+        });
 
         jLabel2.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
         jLabel2.setText("Username:");
@@ -82,6 +129,11 @@ public class frmSignUp extends javax.swing.JFrame {
         jLabel4.setText("Fullname:");
 
         txtFullname.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
+        txtFullname.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtFullnameKeyPressed(evt);
+            }
+        });
 
         btnSignup.setFont(new java.awt.Font("Dialog", 0, 18)); // NOI18N
         btnSignup.setText("Signup");
@@ -105,11 +157,21 @@ public class frmSignUp extends javax.swing.JFrame {
         });
 
         txtPassword.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
+        txtPassword.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtPasswordKeyPressed(evt);
+            }
+        });
 
         jLabel7.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
         jLabel7.setText("Repassword:");
 
         txtRepassword.setFont(new java.awt.Font("Dialog", 0, 20)); // NOI18N
+        txtRepassword.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtRepasswordKeyPressed(evt);
+            }
+        });
 
         jButton1.setFont(new java.awt.Font("Dialog", 0, 18)); // NOI18N
         jButton1.setText("Cancel");
@@ -215,45 +277,7 @@ public class frmSignUp extends javax.swing.JFrame {
 
     private void btnSignupActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSignupActionPerformed
         // TODO add your handling code here:
-        username = txtUsername.getText();
-        String password = txtPassword.getText();
-        String fullname = txtFullname.getText();
-        String repassword = txtRepassword.getText();
-        String ip = null;
-        
-        if(username.equals("") || password.equals("") || 
-                fullname.equals("") || repassword.equals("")) {
-            JOptionPane.showMessageDialog(this, "Please type all field input.");
-            return;
-        }
-        
-        if(!repassword.equals(password)) {
-            JOptionPane.showMessageDialog(this, "Please input the same password.");
-            return;
-        }
-        try {
-            ip = InetAddress.getLocalHost().getHostAddress();
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(frmSignUp.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        Account account = new Account(username, fullname, password, ip, 1);
-        AccountDAO handle = new AccountDAO();
-        
-        try {
-            int result = handle.createAccount(account);
-            if(result != 0) {
-                this.dispose();
-                new frmChat(username).show();
-            }
-        } catch (SQLException ex) {
-//            Logger.getLogger(frmSignUp.class.getName()).log(Level.SEVERE, null, ex);
-            if(ex.getMessage().contains("Duplicate entry")) {
-                JOptionPane.showMessageDialog(this, "Username already exist. Please choose another one.");
-            }
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(frmSignUp.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        signin();
         
     }//GEN-LAST:event_btnSignupActionPerformed
 
@@ -273,6 +297,34 @@ public class frmSignUp extends javax.swing.JFrame {
         this.dispose();
         new frmChat(username).show();
     }//GEN-LAST:event_jButton1ActionPerformed
+
+    private void txtUsernameKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtUsernameKeyPressed
+        // TODO add your handling code here:
+        if (evt.getKeyCode() == evt.VK_ENTER){
+            signin();
+        }
+    }//GEN-LAST:event_txtUsernameKeyPressed
+
+    private void txtFullnameKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtFullnameKeyPressed
+        // TODO add your handling code here:
+        if (evt.getKeyCode() == evt.VK_ENTER){
+            signin();
+        }
+    }//GEN-LAST:event_txtFullnameKeyPressed
+
+    private void txtPasswordKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtPasswordKeyPressed
+        // TODO add your handling code here:
+        if (evt.getKeyCode() == evt.VK_ENTER){
+            signin();
+        }
+    }//GEN-LAST:event_txtPasswordKeyPressed
+
+    private void txtRepasswordKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtRepasswordKeyPressed
+        // TODO add your handling code here:
+        if (evt.getKeyCode() == evt.VK_ENTER){
+            signin();
+        }
+    }//GEN-LAST:event_txtRepasswordKeyPressed
 
     /**
      * @param args the command line arguments

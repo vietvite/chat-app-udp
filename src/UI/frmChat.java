@@ -43,6 +43,7 @@ public class frmChat extends javax.swing.JFrame {
     DefaultListModel listModel;
     ArrayList<ComboItem> onlineFriendList = new ArrayList<>();
     int BUFF_SIZE = 512;
+    boolean isDev = true;
     
     int hostPort = randomRange(1260, 1460);
     /**
@@ -364,7 +365,7 @@ public class frmChat extends javax.swing.JFrame {
     }
     
     private void updateMenubar() {
-        menuAccount.setText(fullname != null ?  fullname : "Account");
+        menuAccount.setText(username != null ?  fullname : "Account");
         if(username == null) {
             JMenuItem loginMenu = new JMenuItem("Login");
             loginMenu.addActionListener((e) -> {
@@ -463,7 +464,7 @@ public class frmChat extends javax.swing.JFrame {
         String hostIp = "";
         try {
             
-            hostIp = InetAddress.getLocalHost().getHostAddress();
+            hostIp = isDev ? InetAddress.getLocalHost().getHostAddress() : "";
         } catch (UnknownHostException ex) {
             Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
         }
