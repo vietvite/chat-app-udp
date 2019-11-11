@@ -48,10 +48,12 @@ public class TransferMessage {
         try {
             DatagramSocket clientSocket = new DatagramSocket();
             InetAddress ipAddr = InetAddress.getByName(ip);
+            System.out.println("ipAddr: " + ipAddr);
+            
             DatagramPacket pkg = new DatagramPacket(message.getBytes(), message.length(), ipAddr, port);
             clientSocket.send(pkg);
             clientSocket.close();
-            System.out.println(message + " sent to IP: " + ip + ", port: " + port);
+            System.out.println("`" + message + "` sent to IP: " + ip + ", port: " + port);
             
         } catch (SocketException | UnknownHostException ex) {
             Logger.getLogger(TransferMessage.class.getName()).log(Level.SEVERE, null, ex);

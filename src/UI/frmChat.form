@@ -143,6 +143,9 @@
           <Properties>
             <Property name="text" type="java.lang.String" value="Message"/>
           </Properties>
+          <Events>
+            <EventHandler event="keyPressed" listener="java.awt.event.KeyListener" parameters="java.awt.event.KeyEvent" handler="txtMessageKeyPressed"/>
+          </Events>
         </Component>
         <Component class="javax.swing.JButton" name="btnSendMessage">
           <Properties>
@@ -254,7 +257,7 @@
         <Component class="javax.swing.JTextField" name="txtToPort">
           <Properties>
             <Property name="horizontalAlignment" type="int" value="0"/>
-            <Property name="text" type="java.lang.String" value="1261"/>
+            <Property name="text" type="java.lang.String" value="1260"/>
           </Properties>
         </Component>
         <Component class="javax.swing.JLabel" name="jLabel4">

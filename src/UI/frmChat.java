@@ -35,6 +35,7 @@ public class frmChat extends javax.swing.JFrame {
 
     String username;
     String fullname;
+    String hostIp = "127.0.0.1";
     TransferMessage messageSocket = new TransferMessage();
     TransferFile fileSocket = new TransferFile();
     
@@ -43,9 +44,10 @@ public class frmChat extends javax.swing.JFrame {
     DefaultListModel listModel;
     ArrayList<ComboItem> onlineFriendList = new ArrayList<>();
     int BUFF_SIZE = 512;
-    boolean isDev = true;
+    boolean isDev = false;
     
-    int hostPort = randomRange(1260, 1460);
+    int hostPort;
+    int toPort;
     /**
      * Creates new form frmChat
      */
@@ -55,6 +57,43 @@ public class frmChat extends javax.swing.JFrame {
         
 //        set form center of screen
         setLocationRelativeTo(null);
+        
+        this.hostPort = isDev ? randomRange(1260, 1460) : 1260;
+    }
+    
+    private void sendMessage() {
+        
+        String rawMessage = txtMessage.getText();
+        if(rawMessage.equals("")){
+            return;
+        }
+        
+        this.toPort = isDev ? Integer.parseInt(txtToPort.getText()) : 1260;
+        String message = hostIp + ":" + rawMessage;
+        
+//        get receiver IP
+        Object selected = null;
+        String ip = null;
+        try {
+            selected = cbbFriendList.getSelectedItem();
+            ip = ((ComboItem)selected).getIp();
+        } catch (Exception e) {
+            if(!isDev) {
+                System.out.println("Chua login");
+                ip = "192.168.1.15";
+            } else {
+                JOptionPane.showMessageDialog(this, "Please login to send message.");
+                return;
+            }
+        }
+        
+        String toIp = isDev ? "127.0.0.1" : ip;
+        
+//        update chatbox
+        listModel.addElement("Me: " + rawMessage);
+        listMessage.setModel(listModel);
+        
+        messageSocket.sendMessage(toIp, toPort, message);
     }
     
     class SendFileThread extends Thread {
@@ -208,6 +247,11 @@ public class frmChat extends javax.swing.JFrame {
         cbbFriendList.setModel(new javax.swing.DefaultComboBoxModel<>(new String[] { "Item 1", "Item 2", "Item 3", "Item 4" }));
 
         txtMessage.setText("Message");
+        txtMessage.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                txtMessageKeyPressed(evt);
+            }
+        });
 
         btnSendMessage.setText("Send");
         btnSendMessage.addActionListener(new java.awt.event.ActionListener() {
@@ -277,7 +321,7 @@ public class frmChat extends javax.swing.JFrame {
         txtPort.setText("1260");
 
         txtToPort.setHorizontalAlignment(javax.swing.JTextField.CENTER);
-        txtToPort.setText("1261");
+        txtToPort.setText("1260");
 
         jLabel4.setText("To port:");
 
@@ -435,13 +479,17 @@ public class frmChat extends javax.swing.JFrame {
     
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         listModel = new DefaultListModel();
+        try {
+            hostIp = isDev ? InetAddress.getLocalHost().getHostAddress() : hostIp;
+        } catch (UnknownHostException ex) {
+            Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         if(username != null) {
             fullname = handle.getFullname(username);
 //            update online state
             handle.setOnlineState(username, "1");
             
-//            hostPort = Integer.parseInt(txtPort.getText());
             messageSocket.openPort(hostPort);
             fileSocket.openPort(hostPort + 1);
             txtPort.setText(String.valueOf(hostPort));
@@ -461,29 +509,7 @@ public class frmChat extends javax.swing.JFrame {
     }//GEN-LAST:event_formWindowClosing
 
     private void btnSendMessageActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSendMessageActionPerformed
-        String hostIp = "";
-        try {
-            
-            hostIp = isDev ? InetAddress.getLocalHost().getHostAddress() : "";
-        } catch (UnknownHostException ex) {
-            Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        String mess = txtMessage.getText();
-        String message = hostIp + ":" + mess;
-        if(message.equals("")){
-            return;
-        }
-        int toPort = Integer.parseInt(txtToPort.getText());
-        
-//        get receiver IP
-        Object selected = cbbFriendList.getSelectedItem();
-//        String IP = ((ComboItem)selected).getIp();
-        
-        listModel.addElement("Me: " + mess);
-        listMessage.setModel(listModel);
-        
-        String IP = "127.0.0.1";
-        messageSocket.sendMessage(IP, toPort, message);
+        sendMessage();
     }//GEN-LAST:event_btnSendMessageActionPerformed
 
     private void btnAttachActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnAttachActionPerformed
@@ -503,6 +529,13 @@ public class frmChat extends javax.swing.JFrame {
         SendFileThread sendFileThread = new SendFileThread(IP, toPort, hostPort, filePath, fileName);
         sendFileThread.start();
     }//GEN-LAST:event_btnAttachActionPerformed
+
+    private void txtMessageKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtMessageKeyPressed
+        // TODO add your handling code here:
+        if (evt.getKeyCode() == evt.VK_ENTER){
+            sendMessage();
+        }
+    }//GEN-LAST:event_txtMessageKeyPressed
 
     /**
      * @param args the command line arguments
