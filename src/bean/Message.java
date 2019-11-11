@@ -14,12 +14,12 @@ import java.util.Date;
 public class Message {
     String username;
     String message;
-    Date date_at;
+    long date_at;
 
     public Message(String username, String message) {
         this.username = username;
         this.message = message;
-        this.date_at = new Date();
+        this.date_at = new Date().getTime();
     }
 
     public String getUsername() {
@@ -38,11 +38,11 @@ public class Message {
         this.message = message;
     }
 
-    public Date getDate_at() {
+    public long getDate_at() {
         return date_at;
     }
 
-    public void setDate_at(Date date_at) {
+    public void setDate_at(long date_at) {
         this.date_at = date_at;
     }
 }

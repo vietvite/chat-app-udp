@@ -28,7 +28,6 @@ public class TransferMessage {
         } catch (SocketException ex) {
             Logger.getLogger(TransferMessage.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
     }
     
     public String receiveMessage() {
@@ -60,6 +59,5 @@ public class TransferMessage {
         } catch (IOException ex) {
             Logger.getLogger(TransferMessage.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
     }
 }

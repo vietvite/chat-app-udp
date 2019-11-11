@@ -44,7 +44,7 @@ public class frmChat extends javax.swing.JFrame {
     DefaultListModel listModel;
     ArrayList<ComboItem> onlineFriendList = new ArrayList<>();
     int BUFF_SIZE = 512;
-    boolean isDev = false;
+    boolean isDev = true;
     
     int hostPort;
     int toPort;
@@ -62,7 +62,6 @@ public class frmChat extends javax.swing.JFrame {
     }
     
     private void sendMessage() {
-        
         String rawMessage = txtMessage.getText();
         if(rawMessage.equals("")){
             return;
@@ -88,6 +87,7 @@ public class frmChat extends javax.swing.JFrame {
         }
         
         String toIp = isDev ? "127.0.0.1" : ip;
+        System.out.println("toIp: " + toIp);
         
 //        update chatbox
         listModel.addElement("Me: " + rawMessage);
@@ -178,7 +178,15 @@ public class frmChat extends javax.swing.JFrame {
                 } else {
                     String[] tmp = pkg.split("[:]");
                     String message = tmp[1];
-                    listModel.addElement(message);
+                    
+                    System.out.println("Sender: " + tmp[0]);
+                    String sender = "";
+                    for(ComboItem i: onlineFriendList) {
+                        if(i.getIp().equals(tmp[0])) {
+                            sender = i.toString() + ": ";
+                        }
+                    }
+                    listModel.addElement(sender + message);
                 }
                 listMessage.setModel(listModel);
             }
@@ -464,8 +472,11 @@ public class frmChat extends javax.swing.JFrame {
         menuEdit.add(saveMessage);
         
         JMenuItem showMessage = new JMenuItem("Show message");
-        menuEdit.add("Show message");
-        
+        menuEdit.add(showMessage);
+        showMessage.addActionListener((e) -> {
+            new frmMessage(username).show();
+            this.dispose();
+        });
     }
     
     private static int randomRange(int min, int max) {
@@ -480,7 +491,7 @@ public class frmChat extends javax.swing.JFrame {
     private void formWindowOpened(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowOpened
         listModel = new DefaultListModel();
         try {
-            hostIp = isDev ? InetAddress.getLocalHost().getHostAddress() : hostIp;
+            hostIp = isDev ? hostIp : InetAddress.getLocalHost().getHostAddress();
         } catch (UnknownHostException ex) {
             Logger.getLogger(frmChat.class.getName()).log(Level.SEVERE, null, ex);
         }
